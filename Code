@@ -1,0 +1,131 @@
+import pymysql
+import csv
+
+def connect_db():
+    return pymysql.connect(
+        host="localhost",
+        user="root",
+        password="root",
+        database="student_details"
+    )
+def add_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+    id=int(input("enter your id"))
+    name = input("Enter name: ")
+    email = input("Enter email: ")
+    dept = input("Enter department: ")
+    cursor.execute("INSERT INTO student_details (id,name, email, dept) VALUES (%s,%s, %s, %s)", (id,name, email, dept))
+    conn.commit()
+    print("Student added successfully.")
+    cursor.close()
+    conn.close()
+
+def view_students():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM student_details")
+    rows = cursor.fetchall()
+    print("\nID | Name | Email | Department")
+    print("-" * 40)
+    for row in rows:
+        print(f"{row[0]} | {row[1]} | {row[2]} | {row[3]}")
+    cursor.close()
+    conn.close()
+
+def update_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+    student_id = int(input("Enter student ID to update: "))
+    choice = input("What to update (name/email/dept): ").strip().lower()
+
+    if choice == "name":
+        new_value = input("Enter new name: ")
+        cursor.execute("UPDATE student_details SET name = %s WHERE id = %s", (new_value, student_id))
+    elif choice == "email":
+        new_value = input("Enter new email: ")
+        cursor.execute("UPDATE student_details SET email = %s WHERE id = %s", (new_value, student_id))
+    elif choice == "dept":
+        new_value = input("Enter new department: ")
+        cursor.execute("UPDATE student_details SET dept = %s WHERE id = %s", (new_value, student_id))
+    else:
+        print("Invalid field.")
+        return
+    conn.commit()
+    print("Student updated.")
+    cursor.close()
+    conn.close()
+
+def delete_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+    student_id = int(input("Enter student ID to delete: "))
+    cursor.execute("DELETE FROM student_details WHERE id = %s", (student_id,))
+    conn.commit()
+    if cursor.rowcount > 0:
+        print("Student deleted.")
+    else:
+        print("Student ID not found.")
+    cursor.close()
+    conn.close()
+
+def search_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+    student_id = int(input("Enter student ID to search: "))
+    cursor.execute("SELECT * FROM student_details WHERE id = %s", (student_id,))
+    result = cursor.fetchone()
+    if result:
+        print(f"ID: {result[0]}, Name: {result[1]}, Email: {result[2]}, Department: {result[3]}")
+    else:
+        print("Student not found.")
+    cursor.close()
+    conn.close()
+
+def export_to_csv():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM student_details")
+    rows = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+    with open("student_details.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(column_names)
+        writer.writerows(rows)
+    print("Data exported to student_details.csv.")
+    cursor.close()
+    conn.close()
+
+def main_menu():
+    while True:
+        print("\n--- Student Management System ---")
+        print("1. Add Student")
+        print("2. View All Students")
+        print("3. Update Student")
+        print("4. Delete Student")
+        print("5. Search Student by ID")
+        print("6. Export to CSV")
+        print("7. Exit")
+
+        choice = input("Select an option: ")
+
+        if choice == '1':
+            add_student()
+        elif choice == '2':
+            view_students()
+        elif choice == '3':
+            update_student()
+        elif choice == '4':
+            delete_student()
+        elif choice == '5':
+            search_student()
+        elif choice == '6':
+            export_to_csv()
+        elif choice == '7':
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid option. Try again.")
+
+if __name__ == "__main__":
+        main_menu()
